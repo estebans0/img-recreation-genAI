@@ -1,0 +1,85 @@
+body {
+    font-family: 'Handjet', cursive;
+    font-family: 'PT Sans Narrow', sans-serif;
+    background-color: #A7BDD9;
+    font-size: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+img {
+    width: 255px;
+    height: auto;
+}
+
+.titulo {
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.input-file {
+    display: none;
+}
+.boton-input{
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 20px;
+    border: 2px solid black;
+    background-color: rgb(167, 189, 217);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-sizing: border-box; 
+}
+
+.input-texto {
+    font-size: 20px;
+    margin: 10px;
+}
+#inputs-texto {
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#info-algoritmo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 20px;
+
+}
+.imagen {
+    width: auto;
+    height: auto;
+    border: 2px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.seccion-inputs{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    margin-top: 20px;
+    background-color: #DCE6F2;
+}
+.col-sm-12col-md-6col-lg-6col-xl-6{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.chart {
+    width: 110%;
+    min-height: 400px;
+}

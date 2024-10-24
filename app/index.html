@@ -1,0 +1,293 @@
+<!-- Autores:
+    - Brandon Calderon Cubero
+    - Esteban Solano Araya
+    - Gerardo Gomez Brenes
+    - Pamela Fernandez Mora 
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Proyecto2</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous"/>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Handjet:wght@300&family=PT+Sans+Narrow&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="genetico.js"></script>
+</head>
+<body>
+    <h1 class = "titulo">Proyecto 2 Análisis de Algoritmos</h1>
+    <div class = "seccion-inputs">
+        <div class="imagen">
+            <img id="imagen_mostrada" src=""/>
+        </div>
+        <label class="boton-input" for = "seleccionar_imagen">Seleccionar imagen</label>
+        <input type = "file" class = "input-file" id = "seleccionar_imagen" onchange="mostrarImagen('seleccionar_imagen','imagen_mostrada')" accept = "image"/>
+    </div>
+    <h2 class="titulo">Información necesaria para la ejecución del algoritmo</h2>
+    <div class = "seccion-inputs">
+        <div id = "inputs-texto">
+            <div class = "input-texto">
+                <label for = "cant_generaciones">Cantidad máxima de generaciones:</label>
+                <input type = "text" id = "cant_generaciones" value = "1000" style="background-color: rgb(186, 203, 217);font-size: 18px;border: 2px solid black;"/>
+            </div class = "input-texto">
+            <div class= "input-texto">
+                <label for = "cant_individuos">Cantidad de individuos por generación:</label>
+                <input type = "text" id = "cant_individuos" value = "50" style="background-color:rgb(186, 203, 217);font-size: 18px;border: 2px solid black;"/>
+            </div>
+            <div class= "input-texto">
+                <label for = "slider_seleccionar">Porcentaje de individuos a ser seleccionados:</label>
+                <input type="range" min="0" max="100" value="20" id="slider_seleccionar">
+                <span id="valor_slider_seleccionar">20</span>
+            </div>
+            <div class= "input-texto">
+                <label for = "slider_mutar">Porcentaje de individuos a ser mutados:</label>
+                <input type="range" min="0" max="100" value="50" id="slider_mutar">
+                <span id="valor_slider_mutar">50</span>
+            </div>
+            <div class= "input-texto">
+                <label for = "slider_combinar">Porcentaje de individuos a ser combinados:</label>
+                <input type="range" min="0" max="100" value="30" id="slider_combinar">
+                <span id="valor_slider_combinar">30</span>
+            </div>
+        </div>
+        <div>
+            <button id="ejecutar_algoritmo" class="boton-input">Ejecutar algoritmo</button>
+        </div>
+    </div>
+    <div class="seccion-inputs">
+        <div class="imagen">
+            <canvas id="canvasOutput"></canvas>
+        </div>
+    </div>
+    <div id = "info-algoritmo">
+        <label id = "tiempo_transcurrido">Tiempo transcurrido: </label>
+        <label id = "promedio_tiempo_generaciones">Tiempo promedio entre generaciones: </label>
+    </div>
+    <h2></h2>
+
+    <h2 class="titulo">Gráfico de los resultados obtenidos</h2>
+    <div class = "seccion-inputs">
+        <div class="container">
+            <div class="row my-4">
+                <div class="col-sm-12col-md-6col-lg-6col-xl-6">
+                    <div id="chart1" class="chart"></div>
+                </div>
+            </div>
+        </div> 
+    </div>
+
+
+    <script>
+        var imgCargada = false;
+        let intervalo = null;
+        let tiempo_transcurrido = 0;
+        let promedio_generaciones = 0;
+        let is_running = false;
+
+        var genMax = 100;
+        var tamPoblacion = 100;
+        var tamanoImg = 255;
+
+        var porcentajeSeleccion = 0.2;
+        var porcentajeMutacion = 0.5;
+        var porcentajeCombinar = 0.3;
+
+        var myChartData=[];
+        const sleepNow = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
+        slider_seleccionar.oninput = function() {
+            var valor_slider_seleccionar = document.getElementById("valor_slider_seleccionar");
+            valor_slider_seleccionar.textContent = slider_seleccionar.value;
+        }
+        slider_mutar.oninput = function() {
+            var valor_slider_mutar = document.getElementById("valor_slider_mutar");
+            valor_slider_mutar.textContent = slider_mutar.value;
+        }
+        slider_combinar.oninput = function() {
+            var valor_slider_combinar = document.getElementById("valor_slider_combinar");
+            valor_slider_combinar.textContent = slider_combinar.value;
+        }
+        function actualizarTiempos(){
+            tiempo_transcurrido++;
+            promedio_generaciones += 0;
+            document.getElementById("tiempo_transcurrido").textContent = "Tiempo transcurrido: " + tiempo_transcurrido;
+            document.getElementById("promedio_tiempo_generaciones").textContent = "Tiempo promedio entre generaciones: " + promedio_generaciones;
+        }
+        document.getElementById("ejecutar_algoritmo").addEventListener("click", async function() {
+            if (is_running) {
+                document.getElementById("ejecutar_algoritmo").textContent = "Ejecutar algoritmo";
+                is_running = false;
+                clearInterval(intervalo);
+                myChartData=[]
+                //document.getElementById("cant_generaciones").value = "";
+                //document.getElementById("cant_individuos").value = "";
+                document.getElementById("tiempo_transcurrido").textContent = "Tiempo transcurrido: ";
+                document.getElementById("promedio_tiempo_generaciones").textContent = "Tiempo promedio entre generaciones: ";
+                tiempo_transcurrido = 0;
+                promedio_generaciones = 0;
+                document.getElementById("seleccionar_imagen").value = "";
+                document.getElementById("imagen_mostrada").src = "";
+                imgCargada = false;
+                document.getElementById("canvasOutput").getContext("2d").clearRect(0, 0, 255, 255);
+                return;
+            }
+            // Se verifican los valores de input
+            if (imgCargada == false) {
+                alert("Debe seleccionar una imagen");
+                return;
+            }
+            let valor_gens = document.getElementById("cant_generaciones").value;
+            if (valor_gens == "" || /^[0-9]*$/.test(valor_gens) == false) {
+                alert("Debe ingresar la cantidad máxima de generaciones");
+                return;
+            }
+            let valor_indivs = document.getElementById("cant_individuos").value;
+            if (valor_indivs == "" || /^[0-9]*$/.test(valor_indivs) == false) {
+                alert("Debe ingresar la cantidad de individuos por generación");
+                return;
+            }
+            porcentajeSeleccion = parseFloat(valor_slider_seleccionar.textContent)/100;
+            porcentajeMutacion = parseFloat(valor_slider_mutar.textContent)/100;
+            porcentajeCombinar = parseFloat(valor_slider_combinar.textContent)/100;
+            if (porcentajeCombinar+porcentajeMutacion+porcentajeSeleccion != 1){
+                alert("La suma de los porcentajes debe ser igual a 100");
+                return;
+            }
+// --------------- INICIO DEL ALGORITMO -----------------
+            // Cambiar el texto del botón y estado de la ejecución
+            document.getElementById("ejecutar_algoritmo").textContent = "Detener ejecución";
+            is_running = true;
+            //intervalo = setInterval(actualizarTiempos, 1000);
+
+            // Se definen los valores iniciales
+            let imgElement = document.getElementById('imagen_mostrada');
+            let imgOriginal = cv.imread(imgElement);
+            let puntosValidos = obtenerPuntosValidos(imgOriginal, tamanoImg);
+            tamPoblacion = parseInt(document.getElementById("cant_individuos").value);
+            genMax = parseInt(document.getElementById("cant_generaciones").value);
+
+            // Algoritmo genético
+            const tiempoInicio = performance.now();
+
+            for (let i=0; i <= genMax; i++) {
+                if (!is_running) {
+                    break;
+                }
+                // Se crea la población inicial
+                if (i == 0) {
+                    var canvas = new cv.Mat.zeros(tamanoImg, tamanoImg, cv.CV_8U);
+                    var poblacion = new Poblacion(imgOriginal, canvas, tamPoblacion, puntosValidos);
+                    poblacion.calcularFitness(puntosValidos, imgOriginal);
+                } else {
+                    // Generaciones siguientes
+                    canvas = new cv.Mat.zeros(tamanoImg, tamanoImg, cv.CV_8U);
+                    poblacion = poblacion.nuevaPoblacion(imgOriginal, canvas, tamPoblacion, porcentajeSeleccion, porcentajeMutacion, porcentajeCombinar, puntosValidos);
+                }
+                console.log(poblacion);
+                myChartData = myChartData.concat([[poblacion.numGen,poblacion.fitness_promedio,poblacion.mejor_fitness]]);
+
+                // Mostrar mejor individuo
+                canvas = new cv.Mat.zeros(tamanoImg, tamanoImg, cv.CV_8U);
+                let mejorIndividuo = poblacion.mejor_individuo.linea;
+                for (let i = 0; i < mejorIndividuo.length-1; i++) {
+                    let p1 = mejorIndividuo[i];
+                    let p2 = mejorIndividuo[i+1];
+                    cv.line(canvas, p1, p2, [255, 255, 255, 255], 2);
+                }
+                cv.imshow('canvasOutput', canvas);
+                await sleepNow(1);
+                canvas.delete();
+                carga();
+            }
+
+            imgOriginal.delete();
+
+            // Calcular tiempo de ejecución y promedio
+            const tiempoFin = performance.now();
+            const tiempoTotal = (tiempoFin - tiempoInicio).toFixed(3);
+            const tiempoPromedioXGen = (tiempoTotal / poblacion.numGen).toFixed(3);
+            document.getElementById("tiempo_transcurrido").textContent = `Tiempo transcurrido: ${tiempoTotal/1000} segundos`;
+            document.getElementById("promedio_tiempo_generaciones").textContent = `Tiempo promedio entre generaciones: ${tiempoPromedioXGen} milisegundos`;
+        });
+
+// --------------- FIN DEL ALGORITMO -----------------
+        function mostrarImagen(id_seleccionador, id_imagen){
+            var file = document.getElementById(id_seleccionador).files[0];
+            var reader = new FileReader();
+            if(file){
+                reader.readAsDataURL(file);
+                imgCargada = true;
+                // Redimensionar y cargar la imagen
+                reader.onloadend = function(){
+                    var img = new Image();
+                    img.src = reader.result;
+                    img.onload = function(){
+                        var canvas = document.createElement('canvas');
+                        var ctx = canvas.getContext('2d');
+                        canvas.width = tamanoImg;
+                        canvas.height = tamanoImg;
+                        ctx.drawImage(img, 0, 0, tamanoImg, tamanoImg);
+                        var dataURL = canvas.toDataURL('image/');
+                        document.getElementById(id_imagen).src = dataURL;
+                    }
+                }
+            }
+        }
+
+        const getOptionChart1 = (data) => {
+            return {
+                tooltip: {
+                    show: true,
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        var dataIndex = params[0].dataIndex;
+                        var info = data[dataIndex];
+                        return `Generación: ${info[0]}<br/>Fitness Promedio: ${info[1].toFixed(2)}<br/>Mejor Fitness: ${info[2].toFixed(2)}`;
+                    },
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    start: 0,
+                    end: 100
+                }],
+                xAxis: {
+                    type: 'category',
+                    data: data.map((item) => item[0].toString()),
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Fitness'
+                },
+                series: [{
+                    name: 'Fitness',
+                    type: 'line',
+                    data: data.map((item) => item[1]),
+                    markPoint: {
+                        data: [
+                            {type: 'max', name: 'Max'},
+                            {type: 'min', name: 'Min'}
+                        ]
+                    },
+                    markLine: {
+                        data: [
+                            {type: 'average', name: 'Avg'}
+                        ]
+                    }
+                }]
+            };
+        };
+        
+        
+        function carga () {
+            const chart1 = echarts.init(document.getElementById('chart1'));
+            chart1.setOption(getOptionChart1(myChartData));
+        };
+    </script>
+
+    <script async src="https://docs.opencv.org/3.4.0/opencv.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.0/echarts.min.js"></script>
+</body>
+</html>
